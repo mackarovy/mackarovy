@@ -3,7 +3,6 @@ import time
 
 GPIO.setmode(GPIO.BCM)
 
-
 with open('light_sensor_pin.txt', 'r') as file:
     LIGHT_SENSOR_PIN = int(file.read())
 
@@ -12,25 +11,39 @@ LED_STRIP_PIN = 17
 GPIO.setup(LIGHT_SENSOR_PIN, GPIO.IN)
 GPIO.setup(LED_STRIP_PIN, GPIO.OUT)
 
-def check_light_level():
-    if GPIO.input(LIGHT_SENSOR_PIN) == GPIO.LOW:
-        return "dark"
-    else:
-        return "bright"
+while True:
+    with open('light_sensor_pin.txt', 'r') as file:
+        light_level = int(file.read())
 
-try:
-    while True:
-        light_level = check_light_level()
+    with open('r.txt', 'r') as file_r:
+        mode = int(file_r.read())
 
-        if light_level == "dark":
-            GPIO.output(LED_STRIP_PIN, GPIO.HIGH)
+    if mode == 1:
+        if light_level < 50:
+            GPIO.output(LED_STRIP_PIN, GPIO.HIGH)  
+            with open('result.txt', 'a') as file:
+                file.write("LED лента включена (режим 1)\n")
         else:
-            GPIO.output(LED_STRIP_PIN, GPIO.LOW)
-        time.sleep(1)
+            GPIO.output(LED_STRIP_PIN, GPIO.LOW) 
+            with open('result.txt', 'a') as file:
+                file.write("LED лента выключена\n")
+    elif mode == 2:
+        if light_level < 50:
+            for dc in range(0, 101, 5):
+                p.ChangeDutyCycle(dc)
+                time.sleep(0.1)
+            time.sleep(10)  
+            for dc in range(100, -1, -5):
+                p.ChangeDutyCycle(dc)
+                time.sleep(0.1)
+            time.sleep(10)  
+            with open('result.txt', 'a') as file:
+                file.write("LED лента включена (режим 2)\n")
+        else:
+            GPIO.output(LED_STRIP_PIN, GPIO.LOW)  
+            with open('result.txt', 'a') as file:
+                file.write("LED лента выключена\n")
 
-        with open('result.txt', 'w') as file:
-            file.write(light_level)
+    time.sleep(1)  
 
-except KeyboardInterrupt:
-    GPIO.cleanup()
                 
